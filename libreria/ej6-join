@@ -1,0 +1,91 @@
+-- Resolución ejercicio N° 6 (JOIN)
+
+--1)Liste factura, fecha, nombre de vendedor y nombre de cliente
+-- para las ventas del año 2006, 2007, 2009 y 2012.
+select nro_factura, fecha, nom_vendedor+ ', ' +ape_vendedor, ape_cliente + ', ' + nom_cliente
+from clientes c join facturas f
+on f.cod_cliente = c.cod_cliente
+join vendedores v on f.cod_vendedor = v.cod_vendedor
+where year(fecha) in (2006, 2007, 2009, 2012)
+
+--2)Liste nro. de factura, fecha, descripción del artículo,
+-- cantidad vendida, precio unitario e importe,
+-- de las facturas correspondientes al mes pasado.
+select f.nro_factura, fecha, descripcion, cantidad, d.pre_unitario, cantidad*d.pre_unitario 'Importe'
+from facturas f join detalle_facturas d
+on f.nro_factura = d.nro_factura
+join articulos a on d.cod_articulo = a.cod_articulo
+where month(fecha) = month(getdate())-1
+and year(fecha) = year(getdate())
+
+--3)Liste código de vendedor, nombre, fecha y factura;
+-- para las ventas en lo que va del año.
+-- Muestre los vendedores aun así no tengan ventas registradas en el año solicitado.
+select v.cod_vendedor, nom_vendedor+ ', ' +ape_vendedor, fecha, nro_factura
+from vendedores v left join facturas f
+on v.cod_vendedor = f.cod_vendedor
+and year(fecha) = 2012
+
+--4)Liste descripción, cantidad e importe;
+-- aun para aquellos artículos que no registran ventas.
+select descripcion, cantidad, d.pre_unitario*cantidad 'Importe'
+from articulos a left join detalle_facturas d
+on a.cod_articulo = d.cod_articulo
+
+--5)Liste factura, fecha, vendedor, cliente, articulo, cantidad e importe;-- para las ventas de febrero y marzo de los años 2006 y 2007
+-- y siempre que el artículo empiece con letras que van de la “a” a la “m”.
+-- Ordene por fecha, cliente y artículo.
+select f.nro_factura, fecha, nom_vendedor+ ', ' +ape_vendedor, ape_cliente + ', ' + nom_cliente Cliente,
+descripcion, cantidad, cantidad*a.pre_unitario
+from facturas f join vendedores v
+on f.cod_vendedor = v.cod_vendedor
+join clientes c on f.cod_cliente = c.cod_cliente
+join detalle_facturas d on f.nro_factura = d.nro_factura
+join articulos a on a.cod_articulo = d.cod_articulo
+where year(fecha) in (2006, 2007)
+and month(fecha) in (2, 3)
+and descripcion like '[a-m]%'
+order by fecha, ape_cliente + ', ' + nom_cliente, descripcion
+
+--6)Liste código de cliente, nombre, fecha y factura para las ventas del año 2007.
+-- Muestre los clientes hayan comprado o no en ese año.
+select c.cod_cliente, ape_cliente + ', ' + nom_cliente Cliente, fecha, nro_factura
+from clientes c left join facturas f
+on f.cod_cliente = c.cod_cliente
+where year(fecha) = 2007
+
+--7)Se quiere saber los artículos que compro el cliente 7 en lo que va del año.
+-- Liste artículo, observaciones e importe.
+select descripcion, observaciones, d.pre_unitario*cantidad 'Importe'
+from articulos a join detalle_facturas d
+on a.cod_articulo = d.cod_articulo
+join facturas f on f.nro_factura = d.nro_factura
+join clientes c on c.cod_cliente = f.cod_cliente
+where year(fecha) = year(getdate())
+and f.cod_cliente = 7
+
+--8)Se quiere saber los artículos que compraron los clientes que empiezan con “p”.
+-- Liste cliente, articulo, cantidad e importe. Ordene por cliente y artículo, este en forma
+descendente.
+-- Rotule como CLIENTE, ARTICULO, CANTIDAD, IMPORTE.select ape_cliente + ', ' + nom_cliente 'CLIENTE', descripcion 'ARTICULO', cantidad 'CANTIDAD', cantidad*d.pre_unitario 'IMPORTE'
+from articulos a join detalle_facturas d
+on a.cod_articulo = d.cod_articulo
+join facturas f on f.nro_factura = d.nro_factura
+join clientes c on c.cod_cliente = f.cod_cliente
+where ape_cliente + ', ' + nom_cliente like 'p%'
+order by ape_cliente + ', ' + nom_cliente, descripcion desc
+
+--9)Listar los artículos (código y descripción) que vendieron los vendedores 2 y 5.
+-- Muestre también el nombre de los vendedores.
+select a.cod_articulo, descripcion, nom_vendedor+ ', ' +ape_vendedor
+from articulos a join detalle_facturas d
+on a.cod_articulo = d.cod_articulo
+join facturas f on f.nro_factura = d.nro_factura
+join vendedores v on v.cod_vendedor = f.cod_vendedor
+where v.cod_vendedor in (2, 5)
+
+--10)Listar todos los clientes (incluidos los que nunca compraron) y los años de compra.
+-- No muestre registros repetidos.
+select distinct ape_cliente + ', ' + nom_cliente Cliente, year(fecha) 'Año'
+from clientes c left join facturas f
+on c.cod_cliente = f.cod_cliente
