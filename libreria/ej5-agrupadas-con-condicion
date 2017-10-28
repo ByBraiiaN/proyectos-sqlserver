@@ -1,0 +1,150 @@
+--Guía de Ejercicios Nº 5 (Consultas agrupadas con condición)
+
+--1.Se quiere saber la fecha de la primer venta, la cantidad total vendida
+--y el importe total vendido por vendedor para los casos en que
+--el promedio de la cantidad vendida sea inferior o igual a 56.
+select v.cod_vendedor ,ape_vendedor+' '+nom_vendedor 'VENDEDOR',
+min(fecha)'PRIMERA VENTA', sum(cantidad)'CANTIDAD TOTAL',
+sum(pre_unitario*cantidad)'IMPORTE TOTAL'
+from vendedores v, facturas f, detalle_facturas d
+where v.cod_vendedor=f.cod_vendedor
+and f.nro_factura=d.nro_factura
+group by v.cod_vendedor, ape_vendedor+' '+nom_vendedor
+having avg(cantidad)<= 56
+--5 filas
+
+--2.Liste el importe máximo y mínimo e importe total por factura y
+--por cliente donde el importe total sea entre 100 y 500.
+select f.nro_factura, c.cod_cliente, ape_cliente +' '+nom_cliente 'Cliente',
+max(pre_unitario*cantidad)'Importe maximo',
+min(pre_unitario*cantidad)'Importe minimo',
+sum(cantidad*pre_unitario)'Importe total'
+from facturas f, clientes c, detalle_facturas d
+where f.nro_factura=d.nro_factura
+and c.cod_cliente= f.cod_cliente
+group by f.nro_factura, c.cod_cliente, ape_cliente +' '+nom_cliente
+having sum(pre_unitario*cantidad)between 100 and 500
+--174 filas
+
+--3.Muestre la cantidad de ventas por vendedor y fecha;
+--para los casos en esa cantidad de ventas sea superior a 1.
+select v.cod_vendedor, ape_vendedor+' '+nom_vendedor 'VENDEDOR',
+f.fecha,count(*)'Cantidad de ventas'
+from vendedores v, facturas f
+where v.cod_vendedor = f.cod_vendedor
+group by v.cod_vendedor, ape_vendedor+' '+nom_vendedor, f.fecha
+having count(*)> 1
+--53 filas
+select v.cod_vendedor, ape_vendedor+' '+nom_vendedor 'VENDEDOR',
+f.fecha,count(*)'Cantidad de ventas'
+from vendedores v, facturas f,detalle_facturas d
+where v.cod_vendedor = f.cod_vendedor and f.nro_factura=d.nro_factura
+group by v.cod_vendedor, ape_vendedor+' '+nom_vendedor, f.fecha
+having count(*)> 1
+--239 filas
+
+--4.Se quiere saber el precio promedio, el importe y el promedio total vendido
+--por artículo;para los casos en que el artículo no comience con “c”,
+--que su cantidad vendida sea igual o superior a 100 o
+-- que ese importe total vendido sea superior a 350
+select a.cod_articulo, a.descripcion,avg(d.pre_unitario)'Precio promedio',
+sum(cantidad*d.pre_unitario)'Importe total',
+avg(cantidad*d.pre_unitario)'Promedio total'
+from articulos a, detalle_facturas d
+where a.cod_articulo=d.cod_articulo
+and a.descripcion not like'c%'
+group by a.cod_articulo, a.descripcion
+having sum(cantidad)>= 100 or sum(cantidad*d.pre_unitario)> 350
+--10 filas
+
+--5.Muestre la cantidad total vendida, el importe total y la fecha de la primer y
+última venta
+--por cliente, para lo números de factura que no sean los siguientes: 2, 12, 20,
+17, 30 y
+--que el promedio de la cantidad vendida oscile entre 2 y 6.
+--Rotule como CLIENTE, CANTIDAD TOTAL, IMPORTE TOTAL, PRIMER VENTA, ULTIMA VENTA.
+select c.cod_cliente, ape_cliente +' '+nom_cliente 'Cliente',
+sum(cantidad)'Cantidad total',sum(cantidad*pre_unitario)'Importe total',
+min(fecha)'Primer venta',max(fecha)'Ultima venta'
+from clientes c, facturas f, detalle_facturas d
+where c.cod_cliente=f.cod_cliente
+and f.nro_factura=d.nro_factura
+and f.nro_factura notin(2,12,20,17,30)
+group by c.cod_cliente, ape_cliente +' '+nom_cliente
+having avg(cantidad) between 2 and 6
+
+--6.Muestre la cantidad total vendida, el importe total vendido y
+--el promedio total vendido por vendedor y cliente;
+--para los casos en que el importe total vendido oscile entre 200 y 600 y
+--para códigos de cliente que oscilen entre 1 y 5.
+select c.cod_cliente, ape_cliente +' '+nom_cliente 'CLIENTE',
+v.cod_vendedor, ape_vendedor+' '+nom_vendedor 'Vendedor',
+sum(cantidad)'Cantidad total',sum(pre_unitario*cantidad)'Importe total',
+avg(cantidad*pre_unitario)'Promedio total'
+from clientes c, detalle_facturas d, vendedores v,facturas f
+where f.nro_factura= d.nro_factura
+and f.cod_cliente= c.cod_cliente
+and f.cod_vendedor= v.cod_vendedor
+and c.cod_cliente between 1 and 5
+group by c.cod_cliente, ape_cliente +' '+nom_cliente,
+v.cod_vendedor, ape_vendedor+' '+nom_vendedor
+having sum(pre_unitario*cantidad)between 200 and 600
+--2 filas
+
+--7.Se quiere saber el importe y el promedio total vendido por factura,
+--para los casos en que la cantidad total vendida sea superior a 50 y
+--que el importe total sea superior a 100.
+--Ordene por importe en forma descendente.
+--Rotule como FACTURA, IMPORTE TOTAL,PROMEDIO.
+select nro_factura 'FACTURA',sum(pre_unitario*cantidad)'IMPORTE TOTAL',
+avg(cantidad*pre_unitario)'PROMEDIO'
+from detalle_facturas
+group by nro_factura
+having sum(cantidad)> 50 and sum(pre_unitario*cantidad)> 100
+order by 2 desc
+--74 filas
+
+--8.Se quiere saber la cantidad total vendida, el precio promedio y
+--el importe total vendido por fecha; para los casos en que el año
+--de la venta sea uno de los siguientes 2008, 2010 o 2011 y
+--que ese importe total sea inferior a 200. Ordene por importe en forma
+descendente.
+select f.fecha 'Fecha',sum(cantidad)'Cantidad total',
+avg(pre_unitario)'Precio Promedio',sum(pre_unitario*cantidad)'Importe total'
+from facturas f, detalle_facturas d
+where f.nro_factura=d.nro_factura
+andyear(fecha)in(2008, 2010, 2011)
+group by f.fecha
+having sum(pre_unitario*cantidad)<200
+order by 4 desc
+--7 filas
+
+--9.Muestre la cantidad total vendida y el promedio total vendido por cliente y
+--fecha; para los casos en que el importe total vendido sea inferior a 150 y
+--que el promedio de la cantidad vendida sea inferior a 20.
+--Rotule como CLIENTE, FECHA, CANTIDAD, IMPORTE PROMEDIO.
+select c.cod_cliente, ape_cliente +' '+nom_cliente 'CLIENTE', f.fecha 'FECHA',
+sum(cantidad)'CANTIDAD',avg(cantidad* pre_unitario)'IMPORTE PROMEDIO'
+from clientes c, facturas f, detalle_facturas d
+where f.cod_cliente= c.cod_cliente
+and f.nro_factura= d.nro_factura
+group by c.cod_cliente, ape_cliente +' '+nom_cliente, f.fecha
+having sum(pre_unitario*cantidad)<150 and avg(cantidad)< 20
+--77 filas
+
+--10.Liste la cantidad total y el promedio de ventas, el importe total y
+--el promedio del importe por vendedor por año, para las ventas realizadas
+anteriores
+--1/1/2008 y que el importe total no supere los $ 850.
+select v.cod_vendedor, ape_vendedor+' '+nom_vendedor 'Vendedor',
+year(f.fecha)'Año', sum(cantidad)'Cantidad total de vendida',
+avg(cantidad)'Promedio de cantidad vendida',
+sum(pre_unitario*cantidad)'Importe total',
+avg(pre_unitario*cantidad)'Promedio'
+from vendedores v, detalle_facturas d, facturas f
+where v.cod_vendedor=f.cod_vendedor
+and f.nro_factura= d.nro_factura
+and f.fecha <'01/01/2008'
+group by v.cod_vendedor, ape_vendedor+' '+nom_vendedor,year(f.fecha)
+having sum(pre_unitario*cantidad)<= 850
+--29 filas
