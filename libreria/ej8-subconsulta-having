@@ -1,0 +1,158 @@
+--Resolución del Ejercicios Nro 8: 
+--Subconsultas en el Having
+
+--1. Se quiere saber ¿Cuándo realizó su primer venta 
+--cada vendedor? y ¿Cuánto fue el importe total de
+--las ventas que ha realizado? Mostrar estos datos en un listado solo para los casos en que su
+--importe promedio de vendido sea superior al importe 
+--promedio general (importe promedio de todas las facturas).
+select f.cod_vendedor 'Código',
+ape_vendedor+' '+nom_vendedor 'Vendedor',
+min(fecha)'1er.Vta.',sum(cantidad*pre_unitario)'Importe total'
+from facturas f join vendedores v
+on f.cod_vendedor=v.cod_vendedor
+join detalle_facturas d on f.nro_factura=d.nro_factura
+group by f.cod_vendedor,ape_vendedor+' '+nom_vendedor
+having avg(cantidad*pre_unitario)>(select 
+						avg(cantidad*pre_unitario)
+						from detalle_facturas)
+--2 filas.Resultado:
+--4	Miranda Marcelo	2000-09-09 00:00:00	76427.60
+--5	Monti Gabriel	2010-07-31 00:00:00	61891.55	
+			
+--2.Liste los montos totales mensuales facturados por 
+--cliente y además el promedio de ese monto y el promedio
+--del precio de artículos Todos esto datos correspondientes 
+--a período que va desde el 1° de febrero al 30 de 
+--agosto del 2014. Sólo muestre los datos si esos montos 
+--totales sea superior o igual al promedio global.
+
+select year(fecha)'Año',month(fecha)'Mes',
+	   c.cod_cliente, ape_cliente+' '+nom_cliente 'Cliente',
+       sum(cantidad*d.pre_unitario)'Monto Total',
+       avg(cantidad*d.pre_unitario)'Monto Promedio ',
+       avg(d.pre_unitario) 'Precio Promedio'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura join clientes c
+  on f.cod_cliente=c.cod_cliente
+where fecha between '1/2/2014' and '1/8/2014'
+group by year(fecha),month(fecha),
+         c.cod_cliente, ape_cliente+' '+nom_cliente
+having sum(cantidad*d.pre_unitario)>=
+						(select avg(cantidad*pre_unitario)
+						 from detalle_facturas)
+--36 filas
+
+--3.Por cada artículo que se tiene a la venta, se quiere
+--saber el importe promedio vendido, la cantidad total 
+--vendida por artículo, para los casos en que los números 
+--de factura no sean uno de los siguientes: 2, 10, 7, 13, 22 
+--y que ese importe promedio sea inferior al importe promedio 
+--de ese artículo.
+select a.cod_articulo, descripcion,
+       avg(cantidad*d.pre_unitario)'Importe promedio',
+       sum(cantidad) 'Cantidad total'
+from articulos a join detalle_facturas d
+  on a.cod_articulo=d.cod_articulo
+where d.nro_factura not in (2,10,7,13,22)
+group by a.cod_articulo, descripcion
+having avg(cantidad*d.pre_unitario)<
+					(select avg(cantidad*pre_unitario)
+					 from detalle_facturas
+					 where cod_articulo=a.cod_articulo)
+--Resultado: 1 fila:
+--17	Cartuchera de Tela	203.728333	602
+		
+--4.Listar la cantidad total vendida, el importe y promedio
+--vendido por fecha, siempre que esa cantidad sea superior 
+--al promedio de la cantidad global. Rotule y ordene.
+select fecha,sum(cantidad)'Cant. total vendida',
+       avg(cantidad*d.pre_unitario)'Importe promedio',
+       sum(cantidad*d.pre_unitario)'Promedio vendido'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura
+group by fecha
+having sum(cantidad)>(select avg(cantidad)
+					  from detalle_facturas)
+order by 1
+--292 filas
+--5.Se quiere saber el promedio del importe vendido y la
+--fecha de la primer venta por fecha y artículo para los 
+--casos en que las cantidades vendidas oscilen entre 5 y
+--20 y que ese importe sea superior al importe promedio 
+--de ese artículo.
+select fecha,a.cod_articulo, descripcion,
+       avg(cantidad*d.pre_unitario)'Importe promedio',
+       min (fecha)'1er.fecha'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura join articulos a
+  on a.cod_articulo=d.cod_articulo
+where cantidad between 5 and 20
+group by fecha,a.cod_articulo, descripcion
+having sum(cantidad*d.pre_unitario) >
+					(select avg(cantidad*pre_unitario)
+					from detalle_facturas 
+					where cod_articulo=a.cod_articulo)
+--212 filas
+
+--6. Emita un listado con los montos diarios facturados 
+--que sean inferior al importe promedio general.
+select fecha,sum(cantidad*d.pre_unitario) 'Monto diario'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura
+group by fecha
+having sum(cantidad*d.pre_unitario)<
+							(select avg(cantidad*pre_unitario)
+							 from detalle_facturas)
+--147 filas
+
+--7.Se quiere saber la fecha de la primera y última venta,
+--el importe total facturado por cliente para los años que
+--oscilen entre el 2007 y 2010 y que el importe promedio
+--facturado sea menor que el importe promedio total para 
+--ese cliente.
+select c.cod_cliente,ape_cliente+' '+nom_cliente'Cliente',
+       min(fecha)'1er.Vta.',max(fecha)'Última venta',
+       sum(cantidad*d.pre_unitario)'Importe total facturado'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura join clientes c
+  on f.cod_cliente=c.cod_cliente
+where year(fecha) between 2007 and 2010
+group by c.cod_cliente,ape_cliente+' '+nom_cliente
+having avg(cantidad*d.pre_unitario)<
+					   (select avg(cantidad*pre_unitario)
+						from facturas f1 join detalle_facturas d1
+						on f1.nro_factura=d1.nro_factura
+						where cod_cliente=c.cod_cliente)
+--Reultado: 8 filas
+--3	 Abarca H?ctor		   2009-08-01	2009-08-01 00:00:00	237.40
+--7	 Paez Roque			   2008-03-08 	2010-08-10 00:00:00	390.10
+--10 Moriel Roberto		   2008-03-08   2010-08-10 00:00:00	146.00
+--1	 Perez Rodolfo		   2007-02-13 	2009-08-04 00:00:00	363.00
+--4	 Morales Santiago	   2008-02-15 	2010-08-07 00:00:00	123.70
+--2	 Castillo Marta Anal?a 2008-02-08 	2010-08-05 00:00:00	416.45
+--5	 Perez Carlos Antonio  2007-02-14 	2010-07-31 00:00:00	344.55
+--8	 Luque Elvira Josefa   2009-08-01 	2010-07-31 00:00:00	111.60
+
+--8. Realice un informe que muestre cuánto fue el total
+--anual facturado por cada vendedor, para los casos en que 
+--el nombre de vendedor no comience con 'B' ni con 'M', 
+--que los nros. de facturas oscilen entre 5 y 25 y que el 
+--promedio del monto facturado sea inferior al promedio
+--de ese año.
+select f.cod_vendedor,ape_vendedor+' '+nom_vendedor 'Vendedor',
+       year(fecha)'Año',sum(cantidad*d.pre_unitario) 'Facturación Total'
+from facturas f join detalle_facturas d
+  on f.nro_factura=d.nro_factura join vendedores v
+  on f.cod_vendedor=v.cod_vendedor
+where nom_vendedor not like '[b,m]%' 
+  and f.nro_factura between 5 and 25
+group by f.cod_vendedor,ape_vendedor+' '+nom_vendedor,year(fecha)
+having avg(cantidad*d.pre_unitario)<
+						(select avg(cantidad*pre_unitario)
+						 from facturas fa join detalle_facturas de
+						   on fa.nro_factura=de.nro_factura
+						 where year(fecha)=year(f.fecha))
+--Resultado: 2 filas
+--3	Lopez Alejandro	2001	185.00
+--3	Lopez Alejandro	2002	135.00
