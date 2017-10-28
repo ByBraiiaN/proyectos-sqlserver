@@ -1,0 +1,249 @@
+--Ejemplos Consultas Agrupadas
+--Cantidad de facturas diarias
+select fecha,count(*) 'Cant. de facturas'
+from facturas
+group by fecha
+
+--Cantidad de facturas por año
+select year(fecha),count(*) 'Cant. de facturas'
+from facturas
+group by year(fecha)
+
+--Cantidad de facturas emitidas por cada vendedor
+--ademas de la primer venta que hizo c/u
+select v.cod_vendedor,
+  ape_vendedor+' '+nom_vendedor 'Vendedor',
+  count(*)'Cant. de facturas',
+  min(fecha) 'Primer Venta'
+from facturas f, vendedores v
+where f.cod_vendedor=v.cod_vendedor
+group by v.cod_vendedor,
+         ape_vendedor+' '+nom_vendedor
+         
+--Ingresos mensuales este año
+select month(fecha) Mes,
+ sum(cantidad*pre_unitario) 'Importe'
+from detalle_facturas d, facturas f
+where f.nro_factura=d.nro_factura
+and year(fecha)=year(getdate())
+group by month(fecha)
+
+--Cantidad de clientes
+select *
+from clientes
+select count(*)
+from clientes
+--es lo mismo que
+select count(ape_cliente)
+from clientes
+
+--cantidad de clientes con tel conocido
+select count(nro_tel)
+from clientes
+select count([e-mail])
+from clientes
+
+--Guía de Ejercicios 4
+
+--1)por cada factura emitida mostrar la cantidad
+--total de artículos vendidos (suma de las cantidades vendidas),
+--la cantidad ítems que tiene cada factura en el detalle (cantidad de registros de detalles)
+--y el Importe total.
+select f.nro_factura 'Nro Factura', sum(cantidad) 'Total de articulos', count(cod_articulo) 'Items', sum(pre_unitario) 'Precio Total'
+from facturas f, detalle_facturas d
+where f.nro_factura = d.nro_factura
+group by f.nro_factura
+
+--2.Se quiere saber en este negocio, cuánto se factura:
+--a.Diariamente 
+select fecha Día,
+ sum(cantidad*pre_unitario)'Importe Mensual'
+from detalle_facturas d, facturas f
+where d.nro_factura=f.nro_factura
+group by fecha
+
+--b.Mensualmente 
+select year(fecha)Año,month(fecha)Mes,
+ sum(cantidad*pre_unitario)'Importe Mensual'
+from detalle_facturas d, facturas f
+where d.nro_factura=f.nro_factura
+group by year(fecha),month(fecha)
+order by 1,2
+
+--c.Anualmente 
+select year(fecha)Año,
+ sum(cantidad*pre_unitario)'Importe Mensual'
+from detalle_facturas d, facturas f
+where d.nro_factura=f.nro_factura
+group by year(fecha
+order by 1
+
+--3.Emitir un listado de la cantidad de facturas confeccionadas diariamente, correspondiente a los meses que no sean enero, julio ni diciembre. Ordene por la cantidad de facturas en forma descendente y fecha.
+select fecha,count(*)'Cant. de Facturas'
+from facturas
+where month(fecha) not in (1,7,12)
+group by fecha
+--348 filas
+
+--4.Mostrar la cantidad total de artículos vendidos, 
+--el importe total vendido y la fecha de la primer
+--venta por cliente, para nombres de cliente que 
+--no empiecen con “p”. 
+select c.cod_cliente 'Código',
+  ape_cliente+' '+nom_cliente 'Cliente',
+  sum(cantidad)'Cant. de art. vendidos',
+  sum(Cantidad*pre_unitario) 'Importe Total',
+  min(fecha) 'Primer venta'
+from facturas f, detalle_facturas d, clientes c
+where f.nro_factura=d.nro_factura
+  and c.cod_cliente = f.cod_cliente
+  and nom_cliente not like 'p%'
+group by c.cod_cliente,
+  ape_cliente+' '+nom_cliente
+-- 9 filas 
+
+--5.Se quiere saber la cantidad y el importe promedio vendido
+--por fecha y cliente, para códigos de vendedor 
+--superiores a 2. Ordene por fecha y cliente.
+select fecha'Fecha Factura',
+ c.cod_cliente'Código Cliente',
+ ape_cliente+' '+nom_cliente 'Cliente',
+ sum(cantidad)'Cantidad total',
+ avg(cantidad)'Promedio de cantidades',
+ avg(cantidad*pre_unitario)'Importe promedio'
+from facturas f, detalle_facturas d,clientes c
+where f.nro_factura=d.nro_factura
+ and c.cod_cliente=f.cod_cliente
+ and cod_vendedor>2
+group by fecha,c.cod_cliente,
+  ape_cliente+' '+nom_cliente
+order by 1,2
+--277 filas
+
+--6.Se quiere saber el importe promedio vendido y 
+--la cantidad total vendida por fecha y artículo, 
+--para códigos de cliente inferior a 3.
+--Ordene por fecha y artículo.
+select fecha'Fecha Factura',
+ a.cod_articulo'Código Artículo',
+ descripcion 'Descripción',
+ avg(cantidad*d.pre_unitario)'Importe promedio',
+ sum(cantidad)'Cantidad total'
+from facturas f, detalle_facturas d,articulos a
+where f.nro_factura=d.nro_factura
+ and a.cod_articulo=d.cod_articulo
+ and cod_cliente<3
+group by fecha,a.cod_articulo,descripcion
+order by 1,2
+--194 filas
+
+--7.Listar la cantidad total vendida, el importe total vendido
+--y el importe promedio total vendido por número de factura,
+--siempre que la fecha no oscile entre el 13/2/2007 y el 13/7/2010.
+select f.nro_factura 'Nro.Factura',
+ sum(cantidad)'Cantidad total',
+ sum(cantidad*pre_unitario)'Importe total',
+ avg(cantidad*pre_unitario)'Importe promedio'
+from facturas f, detalle_facturas d
+where d.nro_factura=f.nro_factura
+ and fecha not between '13/02/2007' and '13/07/2010' 
+group by f.nro_factura
+--519 filas
+
+--8.Mostrar la cantidad de ventas para meses que 
+--oscilen entre julio y noviembre ():
+-- a.Por fecha y vendedor.
+-- b.Por vendedor y fecha.
+--Ordene por los mismos campos por los que agrupa.
+--a)
+select fecha, f.cod_vendedor 'Cód.Vendedor',
+  ape_vendedor+' '+nom_vendedor 'Nombre',
+ count(*)'Cantidad de facturas'
+from facturas f,vendedores v
+where month(fecha) between 7 and 11
+ and f.cod_vendedor=v.cod_vendedor
+group by fecha, f.cod_vendedor,
+  ape_vendedor+' '+nom_vendedor
+order by 1,2
+--74 filas
+
+--b)
+select f.cod_vendedor 'Cód.Vendedor',
+  ape_vendedor+' '+nom_vendedor 'Nombre',fecha,
+ count(*)'Cantidad de facturas'
+from facturas f,vendedores v
+where month(fecha) between 7 and 11
+ and f.cod_vendedor=v.cod_vendedor
+group by f.cod_vendedor,
+  ape_vendedor+' '+nom_vendedor,fecha
+order by 1,3
+--74 filas
+
+--9.Emitir un reporte que muestre la fecha de la primer 
+--y última venta y el importe comprado por cliente. 
+--Rotule como CLIENTE, PRIMER VENTA, ÚLTIMA VENTA, IMPORTE.
+select c.cod_cliente'Código Cliente',
+ ape_cliente+' '+nom_cliente 'Cliente',
+ min(fecha)'Primer vta.',
+ max(fecha)'Última vta.',
+ sum (cantidad*pre_unitario) Importe
+from clientes c, facturas f, detalle_facturas d
+where c.cod_cliente=f.cod_cliente
+and f.nro_factura=d.nro_factura
+group by c.cod_cliente,
+ ape_cliente+' '+nom_cliente
+--10 filas
+
+--10.Se quiere saber el importe total vendido, 
+--la cantidad total vendida y el precio unitario promedio 
+--por cliente y artículo, siempre que el nombre 
+--del cliente comience con letras que van de la 
+--“a” a la “m”. Ordene por cliente, 
+--precio unitario promedio en forma descendente y artículo. Rotule como IMPORTE TOTAL, CANTIDAD TOTAL, PRECIO PROMEDIO.
+select c.cod_cliente 'Cód.Cliente',
+ ape_cliente+' '+nom_cliente 'Cliente',
+ a.cod_articulo 'Cód.artículo', descripcion,
+ sum(cantidad*d.pre_unitario) Importe,
+ sum(cantidad)'Cantidad total',
+ avg(d.pre_unitario) 'Precio promedio'
+from clientes c, articulos a, detalle_facturas d,
+	 facturas f
+where c.cod_cliente=f.cod_cliente
+ and f.nro_factura=d.nro_factura
+ and a.cod_articulo=d.cod_articulo
+ and nom_cliente like '[a-m]%'
+group by c.cod_cliente,ape_cliente+' '+nom_cliente,
+	a.cod_articulo, descripcion
+order by 1,[Precio promedio]desc,a.cod_articulo
+--98 filas
+
+--11.Mostrar la fecha de la primera venta y la cantidad 
+--de ventas (cantidad de registros en el detalle)  
+--por vendedor, para el año pasado.
+select f.cod_vendedor'Cód.vendedor',
+  ape_vendedor+' '+nom_vendedor'Nombre Vendedor',
+  min(fecha) 'Primer Vta.',
+  count(*)'Cantidad de ventas'
+from detalle_facturas d, facturas f, vendedores v
+where year(fecha)=year(getdate())-1
+ and f.nro_factura=d.nro_factura
+ and v.cod_vendedor=f.cod_vendedor
+group by f.cod_vendedor,
+  ape_vendedor+' '+nom_vendedor
+
+--12.Se quiere saber la cantidad de facturas y la
+--fecha la primer y última factura por vendedor y
+--cliente, para números de factura que oscilan entre
+--5 y 30. Ordene por vendedor, cantidad de ventas
+--en forma descendente y cliente.
+select f.cod_vendedor,ape_vendedor+' '+nom_vendedor Vendedor,
+ c.cod_cliente,ape_cliente+' '+nom_cliente Cliente,
+ count(*)'Cant.Facturas', min(fecha)'Primer factura',
+ max(fecha)'Última factura'
+from facturas f, clientes c, vendedores v
+where f.nro_factura between 5 and 30
+ and f.cod_cliente=c.cod_cliente
+ and f.cod_vendedor=v.cod_vendedor
+group by f.cod_vendedor,ape_vendedor+' '+nom_vendedor,
+ c.cod_cliente,ape_cliente+' '+nom_cliente
+--14 filas
