@@ -1,0 +1,270 @@
+--Solución del Practico
+use vivero_fenix_2015 --ver nombre de la base de datos en su servidor
+
+--Select y Order by
+--1) Listado de los clientes de la empresa, mostrando solo el código, apellido y nombre,
+-- ordenado por código.
+select cod_cliente, apellido, nombre
+from clientes
+order by cod_cliente
+
+--2) Ídem al anterior pero rotule los campos como Código de Cliente, Apellido, Nombre.
+--Ordenar por apellido y nombre en forma ascendente.
+select cod_cliente 'Codigo de Cliente' , apellido 'Apellido' , nombre 'Nombre'
+from clientes
+order by apellido desc, nombre desc --utiliza las columnas para ordenar
+select cod_cliente 'Codigo de Cliente' , apellido 'Apellido' , nombre 'Nombre'
+from clientes
+order by 2 desc, 3 desc -- el 1 para cod cliente, 2 para apellido y 3 para nombre
+select cod_cliente 'Codigo de Cliente' , apellido 'Apellido' , nombre 'Nombre'
+from clientes
+order by Apellido desc, Nombre desc --utiliza el alias de las columnas para ordenar
+
+--3) Listado de las plantas que se venden, mostrando el código, descripción y precio,
+-- ordenadas por código en forma descendente.
+
+select cod_planta, descripcion, precio
+from plantas
+order by 1 desc
+
+--4) Mostrar el stock de cada planta, ordenadas por la descripción de las plantas.
+-- Rotular: Nombre Planta, Stock Actual
+select descripcion 'Nombre Planta', stock 'Stock Actual'
+from plantas
+order by [Nombre Planta]
+
+--5) Listado de las localidades que compran a la empresa, ordenados por orden alfabético
+select nombre
+from localidades
+order by 1
+
+--6) Mostrar apellido y nombre del cliente en una sola columna, además de su código.
+select cod_cliente 'Código de Cliente', apellido + ', ' + nombre 'Nombre Completo'
+from clientes
+
+--7) Mostrar todos los datos de las todas las plantas y además calcular el precio con
+--un descuento del 10%.
+select * , precio * 0.9 'Precio con 10% Dto'
+from plantas
+
+--8) Mostrar el precio total de stock de cada planta
+select descripcion, precio*stock 'Valuación'
+from plantas
+
+--Comparación
+--9) Mostrar todos los clientes deudores (deudor="S"), solo su código, nombre, apellido.
+select cod_cliente, nombre, apellido
+from clientes
+where deudor = 'S'
+
+--10) Mostrar todas las plantas cuyo stock sea mayor a 20, ordenadas por stock
+select descripcion, stock, precio
+from plantas
+where precio > 20
+order by stock
+
+--11) Mostrar todas las plantas cuyo stock no sea 30, ordenados por código
+select cod_planta ,descripcion, stock
+from plantas
+where stock <> 30
+order by cod_planta
+
+--12) Mostrar todas las facturas cuyas fechas sean mayores al 1/6/09.
+select nro_factura, fecha
+from facturas
+where fecha > '01/06/2009'
+
+--13) Listar todas las plantas cuyo stock es menor a 10 unidades.
+select descripcion, precio, stock
+from plantas
+where stock < 10
+
+--Between
+--14) Ídem a la consulta anterior pero las fechas oscilen entre 1/6/08 y 1/3/10.
+select nro_factura, fecha
+from facturas
+where fecha between '01/06/2008' and '01/03/2010'
+
+--15) Listar los datos de las plantas cuyo precio esté entre 20 y 70
+select cod_planta ,descripcion, precio
+from plantas
+where precio between 20 and 70
+
+--16) Mostrar la descripción, stock y precio de las plantas cuyo stock oscile entre 5 y 10
+select descripcion, stock, precio
+from plantas
+where stock between 5 and 10
+
+--Like
+--17) Todos los clientes cuyo apellido comience con "F".
+select apellido, nombre
+from clientes
+where apellido like 'F%'
+
+--18) Todos los clientes cuyo nombre contenga una "u".
+select apellido, nombre
+from clientes
+where nombre like '%u%'
+
+--19) Todos los clientes cuyo apellido no comience con letras que van de la "a" a la "c".
+select apellido, nombre
+from clientes
+where apellido not like '[a-c]%'
+
+--20) Todos los clientes cuyo apellido termine con "ez"
+select apellido, nombre
+from clientes
+where apellido like '%ez'
+
+--21) Listar todos los clientes cuyo apellido no comience con "p"
+select apellido, nombre
+from clientes
+where apellido not like 'p%'
+
+--22) Ídem al anterior pero que no comience ni con "p" ni con "z"
+select apellido, nombre
+from clientes
+where apellido not like '[p,z]%'
+
+--Null
+--23) Mostrar todos los clientes que no tengan teléfono.
+select apellido, nombre c
+where telefono is null
+
+--24) Listar apellido, nombre, e-mail de los clientes cuyos direcciones de mail sea conocidas
+select apellido, nombre c, email
+where email is not null
+
+--25) Listar apellido, nombre, teléfono de los clientes cuyos teléfono sea conocido
+select apellido, nombre c, telefono
+where telefono is not null
+
+--Varias condiciones de búsqueda
+--26) Listar todas las plantas que comiencen con R y precio superior a $7.
+select descripcion, precio, stock
+from plantas
+where descripcion like 'R%' and precio > 7
+
+--27) Mostrar todas las plantas cuyo precio sean menor a $ 30 o mayor a & 80, ordenadas por código de
+planta
+select cod_planta ,descripcion, precio
+from plantas
+where precio < 30 or precio > 80
+order by 1
+
+--28) Listar apellido, nombre, teléfono e e-mail de los clientes cuyos direcciones de mail o
+-- teléfono sean conocidos.
+select apellido, nombre c, telefono, email
+where email is not null or telefono is not null
+
+--29) Listar los datos de los clientes cuyos nombres comiencen no comiencen ni con m ni con p o
+-- cuyos apellidos comiencen con b
+select *
+from clientes
+where nombre not like '[m,p]%' or apellido like 'b%'
+select *
+from clientes
+where nombre not like 'm%' and nombre not like 'p%' or apellido like 'b%'
+
+--30) Mostrar todas las plantas cuyo stock sea mayor a 10 y menor a 30, ordenado por descripción
+select cod_planta ,descripcion, stock
+from plantas
+where precio > 10 and precio < 30
+order by 2
+
+--Dos tablas
+--31) Listado de clientes mostrando apellido y nombre, calle y número.
+select apellido, cl.nombre, ca.nombre 'Calle', altura 'Nro'
+from clientes cl, calles ca
+where cl.cod_calle = ca.cod_calle
+
+--32) Listado de clientes mostrando apellido, nombre y localidad a la que pertenece.
+select apellido, c.nombre, l.nombre 'Localidad'
+from clientes c, localidades l
+where l.cod_localidad = c.cod_localidad
+
+--33) Listado de clientes mostrando apellido, nombre y barrio al que pertenece.
+select apellido, c.nombre, b.nombre 'Barrio'
+from clientes c, barrios b
+where c.cod_barrio = b.cod_barrio
+
+--34) Todas las facturas abonadas en efectivo, ordenada por código de cliente.
+select *
+from facturas f, formas_pagos fp
+where f.cod_forma_pago=fp.cod_forma_pago
+ and descripcion='efectivo'
+ 
+--35) Listar todas plantas donde el tipo de planta sea Flores.
+select descripcion, precio, stock
+from plantas p, tipos_plantas t
+where p.cod_tipo_planta = t.cod_tipo_planta
+ and nombre = 'flores'
+ 
+--36) Todos los clientes cuya localidad sea AREQUITO
+select c.nombre +',' + apellido 'Nombre completo'
+from clientes c, localidades l
+where c.cod_localidad = l.cod_localidad
+ and l.nombre= 'arequito'
+ 
+--37) Todos los registros completos de clientes cuyo IVA sea igual a Monotributo,
+-- ordenado por localidad.
+select *
+from clientes cl , condiciones_iva co
+where cl.cod_condicion_iva = co.cod_condicion_iva
+ and descripcion = 'monotributista'
+order by cod_localidad
+
+--38) Listar todos los datos de los clientes que viven en la localidad de Córdoba o
+--su apellido comience con la letra "A"
+select c.*
+from clientes c, localidades l
+where c.cod_localidad = l.cod_localidad
+ and (l.nombre = 'córdoba' or apellido like 'A%')
+ 
+--39) Listar clientes que viven en la localidad de Carlos Paz, Alta Gracia y Cba Capital
+select apellido, nombre
+from clientes c, localidades l
+where c.cod_localidad = l.cod_localidad
+ and (l.nombre = 'córdoba'
+ or l.nombre= 'carlos paz'
+ or l.nombre = 'alta gracia')
+ 
+--40) Mostrar todos los clientes que no viven en las localidades de AREQUITO y MERLO
+select apellido, nombre
+from clientes c, localidades l
+where c.cod_localidad = l.cod_localidad
+and not (l.nombre = 'arequito'
+or l.nombre = 'merlo')
+
+--41) Mostrar nombre, apellido y barrio de los clientes de Cba. Capital o de aquellos
+-- cuyos apellidos no comiencen con letras de la "D" a la "P". Ordenar por barrio.
+select apellido, c.nombre, b.nombre 'barrio'
+from clientes c, localidades l, barrios b
+where c.cod_localidad = l.cod_localidad
+ and b.cod_barrio = c.cod_barrio
+ and (l.nombre = 'córdoba'
+ or apellido not like '[d-p]%')
+order by barrio
+
+--42) Listar el detalle de la factura calculando la cantidad por el precio.
+select nro_factu, descripcion, cantidad, precio, precio*cantidad 'subtotal'
+from plantas p, detalles_facturas d
+where p.cod_planta = d.cod_planta
+
+--43) Listar todos los clientes que vivan en provincias que comiencen con 'San' y
+--que sea Monotributista.
+select apellido, c.nombre, p.nombre
+from clientes cl , condiciones_iva co, provincias p
+where cl.cod_condicion_iva = co.cod_condicion_iva
+ and cl.cod_provincia = p.cod_provincia
+ and descripcion = 'monotributista'
+ and p.nombre like 'san%'
+ 
+--44) Listar todos los clientes que viven en barrio Alberdi, Alta Córdoba y
+--que además posean teléfono.
+select apellido, c.nombre, b.nombre 'Barrio'
+from clientes c, barios b
+where c.cod_barrio = b.cod_barrio
+and (b.nombre = 'alberdi'
+ or b.nombre = 'Alta Córdoba')
+and telefono is not null
